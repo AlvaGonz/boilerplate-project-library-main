@@ -34,18 +34,27 @@ $( document ).ready(function() {
   });
   
   $('#bookDetail').on('click','button.deleteBook',function() {
-    $.ajax({
-      url: '/api/books/'+this.id,
-      type: 'delete',
-      success: function(data) {
-        //update list
-        $('#detailComments').html('<p style="color: red;">'+data+'<p><p>Refresh the page</p>');
-      }
-    });
+    if (confirm('⚠️ Are you sure you want to delete this book?')) {
+      $.ajax({
+        url: '/api/books/'+this.id,
+        type: 'delete',
+        success: function(data) {
+          alert('✅ ' + data);
+          $('#detailComments').html('<p style="color: #10b981; font-weight: 600;">✅ ' + data + '</p><p style="color: var(--text-secondary);">Refresh the page to see updated list</p>');
+        },
+        error: function(err) {
+          alert('❌ Error: ' + (err.responseText || 'Unknown error'));
+        }
+      });
+    }
   });  
   
   $('#bookDetail').on('click','button.addComment',function() {
     let  newComment = $('#commentToAdd').val();
+    if (!newComment.trim()) {
+      alert('⚠️ Please enter a comment');
+      return;
+    }
     $.ajax({
       url: '/api/books/'+this.id,
       type: 'post',
@@ -54,32 +63,46 @@ $( document ).ready(function() {
       success: function(data) {
         comments.unshift(newComment); //adds new comment to top of list
         $('#detailComments').html(comments.join(''));
+        $('#commentToAdd').val(''); // Clear input
+      },
+      error: function(err) {
+        alert('❌ Error adding comment: ' + (err.responseText || 'Unknown error'));
       }
     });
   });
   
-  $('#newBook').click(function() {
+  $('#newBookForm').submit(function(e) {
+    e.preventDefault();
     $.ajax({
       url: '/api/books',
       type: 'post',
       dataType: 'json',
       data: $('#newBookForm').serialize(),
       success: function(data) {
-        //update list
+        alert('✅ Book added successfully!');
+        location.reload();
+      },
+      error: function(err) {
+        alert('❌ Error adding book: ' + (err.responseJSON || 'Unknown error'));
       }
     });
   });
   
   $('#deleteAllBooks').click(function() {
-    $.ajax({
-      url: '/api/books',
-      type: 'delete',
-      dataType: 'json',
-      data: $('#newBookForm').serialize(),
-      success: function(data) {
-        //update list
-      }
-    });
+    if (confirm('⚠️ Are you sure you want to delete ALL books?')) {
+      $.ajax({
+        url: '/api/books',
+        type: 'delete',
+        dataType: 'json',
+        success: function(data) {
+          alert('✅ All books deleted successfully!');
+          location.reload();
+        },
+        error: function(err) {
+          alert('❌ Error deleting books: ' + (err.responseJSON || 'Unknown error'));
+        }
+      });
+    }
   }); 
   
 });
