@@ -14,50 +14,50 @@ const Book = require('../models/Book');
 module.exports = function (app) {
 
   app.route('/api/books')
-    .get(function (req, res){
+    .get(async function (req, res){
       //response will be array of book objects
       //json res format: [{"_id": bookid, "title": book_title, "commentcount": num_of_comments },...]
-      Book.find({}, (err, books) => {
-        if(err) {
-          console.error(err);
-          return res.status(500).send('Error retrieving books');
-        }
+      try {
+        const books = await Book.find({});
         res.json(books);
-      });
+      } catch(err) {
+        console.error(err);
+        return res.status(500).send('Error retrieving books');
+      }
     })
     
-    .post(function (req, res){
+    .post(async function (req, res){
       let title = req.body.title;
       //response will contain new book object including atleast _id and title
       if(!title) {
         return res.send('missing required field title');
       }
       
-      const newBook = new Book({ title: title });
-      newBook.save((err, savedBook) => {
-        if(err) {
-          console.error(err);
-          return res.status(500).send('Error saving book');
-        }
+      try {
+        const newBook = new Book({ title: title });
+        const savedBook = await newBook.save();
         res.json({ _id: savedBook._id, title: savedBook.title });
-      });
+      } catch(err) {
+        console.error(err);
+        return res.status(500).send('Error saving book');
+      }
     })
     
-    .delete(function(req, res){
+    .delete(async function(req, res){
       //if successful response will be 'complete delete successful'
-      Book.deleteMany({}, (err) => {
-        if(err) {
-          console.error(err);
-          return res.status(500).send('Error deleting books');
-        }
+      try {
+        await Book.deleteMany({});
         res.send('complete delete successful');
-      });
+      } catch(err) {
+        console.error(err);
+        return res.status(500).send('Error deleting books');
+      }
     });
 
 
 
   app.route('/api/books/:id')
-    .get(function (req, res){
+    .get(async function (req, res){
       let bookid = req.params.id;
       //json res format: {"_id": bookid, "title": book_title, "comments": [comment,comment,...]}
       
@@ -66,19 +66,19 @@ module.exports = function (app) {
         return res.send('no book exists');
       }
       
-      Book.findById(bookid, (err, book) => {
-        if(err) {
-          console.error(err);
-          return res.send('no book exists');
-        }
+      try {
+        const book = await Book.findById(bookid);
         if(!book) {
           return res.send('no book exists');
         }
         res.json({ _id: book._id, title: book.title, comments: book.comments });
-      });
+      } catch(err) {
+        console.error(err);
+        return res.send('no book exists');
+      }
     })
     
-    .post(function(req, res){
+    .post(async function(req, res){
       let bookid = req.params.id;
       let comment = req.body.comment;
       //json res format same as .get
@@ -91,28 +91,23 @@ module.exports = function (app) {
         return res.send('no book exists');
       }
       
-      Book.findById(bookid, (err, book) => {
-        if(err) {
-          console.error(err);
-          return res.send('no book exists');
-        }
+      try {
+        const book = await Book.findById(bookid);
         if(!book) {
           return res.send('no book exists');
         }
         
         book.comments.push(comment);
         book.commentcount = book.comments.length;
-        book.save((err, savedBook) => {
-          if(err) {
-            console.error(err);
-            return res.status(500).send('Error saving comment');
-          }
-          res.json({ _id: savedBook._id, title: savedBook.title, comments: savedBook.comments });
-        });
-      });
+        const savedBook = await book.save();
+        res.json({ _id: savedBook._id, title: savedBook.title, comments: savedBook.comments });
+      } catch(err) {
+        console.error(err);
+        return res.send('no book exists');
+      }
     })
     
-    .delete(function(req, res){
+    .delete(async function(req, res){
       let bookid = req.params.id;
       //if successful response will be 'delete successful'
       
@@ -121,16 +116,16 @@ module.exports = function (app) {
         return res.send('no book exists');
       }
       
-      Book.findByIdAndDelete(bookid, (err, book) => {
-        if(err) {
-          console.error(err);
-          return res.send('no book exists');
-        }
+      try {
+        const book = await Book.findByIdAndDelete(bookid);
         if(!book) {
           return res.send('no book exists');
         }
         res.send('delete successful');
-      });
+      } catch(err) {
+        console.error(err);
+        return res.send('no book exists');
+      }
     });
   
 };

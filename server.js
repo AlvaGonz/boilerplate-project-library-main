@@ -39,7 +39,7 @@ app.use(function(req, res, next) {
 });
 
 //MongoDB Connection
-mongoose.connect(process.env.DB).catch(err => {
+mongoose.connect(process.env.DB, { useNewUrlParser: true, useUnifiedTopology: true }).catch(err => {
   console.error('MongoDB connection error:', err);
 });
 
