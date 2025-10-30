@@ -3,6 +3,7 @@
 const express     = require('express');
 const bodyParser  = require('body-parser');
 const cors        = require('cors');
+const mongoose    = require('mongoose');
 require('dotenv').config();
 
 const apiRoutes         = require('./routes/api.js');
@@ -37,6 +38,17 @@ app.use(function(req, res, next) {
     .send('Not Found');
 });
 
+//MongoDB Connection
+mongoose.connect(process.env.DB).catch(err => {
+  console.error('MongoDB connection error:', err);
+});
+
+const db = mongoose.connection;
+db.on('error', console.error.bind(console, 'MongoDB connection error:'));
+db.once('open', () => {
+  console.log('MongoDB connected successfully');
+});
+
 //Start our server and tests!
 const listener = app.listen(process.env.PORT || 3000, function () {
   console.log('Your app is listening on port ' + listener.address().port);
@@ -49,7 +61,7 @@ const listener = app.listen(process.env.PORT || 3000, function () {
           console.log('Tests are not valid:');
           console.error(e);
       }
-    }, 1500);
+    }, 3500);
   }
 });
 
